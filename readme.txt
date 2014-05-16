@@ -10,6 +10,7 @@ Wiki   : https://github.com/IgnitedDatatables/Ignited-Datatables/wiki
 Discuss: http://ellislab.com/forums/viewthread/160896/
 Contact: Vincent Bambico <metal.conspiracy@gmail.com>
          Yusuf Ozdemir <yusuf@ozdemir.be>
+         Anggra Sastriawan <anggra@gratif.com>
 
 ============
 Requirements
@@ -22,6 +23,11 @@ CodeIgniter "Reactor"
 Install
 =======
 To install the library, copy the libraries/datatables.php file into your application/libraries folder.
+
+============
+Updates
+============
+Version 1.16 - Changes to support DataTables 1.10
 
 =======
 License
