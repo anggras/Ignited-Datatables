@@ -30,6 +30,7 @@
     private $or_where       = array();
     private $where_in       = array();
     private $like           = array();
+    private $or_like        = array();
     private $filter         = array();
     private $add_columns    = array();
     private $edit_columns   = array();
@@ -165,10 +166,10 @@
     * @param bool $backtick_protect
     * @return mixed
     */
-    public function where_in($key_condition, $val = NULL, $backtick_protect = TRUE)
+    public function where_in($key_condition, $val = NULL)
     {
-      $this->where_in[] = array($key_condition, $val, $backtick_protect);
-      $this->ci->db->where_in($key_condition, $val, $backtick_protect);
+      $this->where_in[] = array($key_condition, $val);
+      $this->ci->db->where_in($key_condition, $val);
       return $this;
     }
 
@@ -194,10 +195,25 @@
     * @param bool $backtick_protect
     * @return mixed
     */
-    public function like($key_condition, $val = NULL, $backtick_protect = TRUE)
+    public function like($key_condition, $val = NULL, $side = 'both')
     {
-      $this->like[] = array($key_condition, $val, $backtick_protect);
-      $this->ci->db->like($key_condition, $val, $backtick_protect);
+      $this->like[] = array($key_condition, $val, $side);
+      $this->ci->db->like($key_condition, $val, $side);
+      return $this;
+    }
+
+    /**
+    * Generates the OR %LIKE% portion of the query
+    *
+    * @param mixed $key_condition
+    * @param string $val
+    * @param bool $backtick_protect
+    * @return mixed
+    */
+    public function or_like($key_condition, $val = NULL, $side = 'both')
+    {
+      $this->or_like[] = array($key_condition, $val, $side);
+      $this->ci->db->or_like($key_condition, $val, $side);
       return $this;
     }
 
@@ -310,7 +326,7 @@
 
       if($sSearch != '')
         for($i = 0; $i < count($mColArray); $i++)
-          if($mColArray[$i]['searchable'] == 'true' )
+          if ($mColArray[$i]['searchable'] == 'true' && !array_key_exists($mColArray[$i]['data'], $this->add_columns))
             if($this->check_cType())
               $sWhere .= $this->select[$mColArray[$i]['data']] . " LIKE '%" . $sSearch . "%' OR ";
             else
@@ -417,13 +433,16 @@
         $this->ci->db->or_where($val[0], $val[1], $val[2]);
         
       foreach($this->where_in as $val)
-        $this->ci->db->where_in($val[0], $val[1], $val[2]);
+        $this->ci->db->where_in($val[0], $val[1]);
 
       foreach($this->group_by as $val)
         $this->ci->db->group_by($val);
 
       foreach($this->like as $val)
         $this->ci->db->like($val[0], $val[1], $val[2]);
+
+      foreach($this->or_like as $val)
+        $this->ci->db->or_like($val[0], $val[1], $val[2]);
 
       if(strlen($this->distinct) > 0)
       {
@@ -445,6 +464,9 @@
     private function exec_replace($custom_val, $row_data)
     {
       $replace_string = '';
+      
+      // Go through our array backwards, else $1 (foo) will replace $11, $12 etc with foo1, foo2 etc
+      $custom_val['replacement'] = array_reverse($custom_val['replacement'], true);
 
       if(isset($custom_val['replacement']) && is_array($custom_val['replacement']))
       {
